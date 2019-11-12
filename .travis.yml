@@ -1,0 +1,21 @@
+services:
+  - docker
+language: java
+jdk:
+- openjdk11
+install: "/bin/true"
+script:
+- export BRANCH=$(if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then echo $TRAVIS_BRANCH; else echo $TRAVIS_PULL_REQUEST_BRANCH; fi)
+- echo "TRAVIS_BRANCH=$TRAVIS_BRANCH, PR=$PR, BRANCH=$BRANCH"
+- if [ ! -z "${TRAVIS_TAG}" ]; then mvn versions:set -DnewVersion=${TRAVIS_TAG:1}; fi
+- mvn clean install -q
+cache:
+  directories:
+  - "$HOME/.m2"
+before_deploy:
+  - export WEBGOAT_SERVER_TARGET_DIR=$HOME/build/$TRAVIS_REPO_SLUG/webgoat-server/target
+  - export WEBWOLF_TARGET_DIR=$HOME/build/$TRAVIS_REPO_SLUG/webwolf/target
+  - export WEBGOAT_ARTIFACTS_FOLDER=$HOME/build/$TRAVIS_REPO_SLUG/Deployable_Artifacts/
+  - mkdir -p $WEBGOAT_ARTIFACTS_FOLDER
+  - cp -fa $WEBGOAT_SERVER_TARGET_DIR/*.jar $WEBGOAT_ARTIFACTS_FOLDER/
+  - cp -fa $WEBWOLF_TARGET_DIR/*.jar $WEBGOAT_ARTIFACTS_FOLDER/
